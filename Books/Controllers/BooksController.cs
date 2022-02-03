@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Books.Data;
 using Books.Models;
+using Books.ViewModel;
 
 namespace Books.Controllers
 {
@@ -20,9 +21,23 @@ namespace Books.Controllers
         }
 
         // GET: Books
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string bookAuthor)
         {
-            return View(await _context.Book.ToListAsync());
+            IQueryable<string> authorQuery = from m in _context.Book orderby m.Author select m.Author;
+            var books = from b in _context.Book select b;
+
+            if (!String.IsNullOrEmpty(bookAuthor))
+            {
+                books = books.Where(author => author.Author == bookAuthor);
+            }
+
+            var authorViewModel = new AuthorViewModel
+            {
+                Author = new SelectList(await authorQuery.Distinct().ToListAsync()),
+                Books = await books.ToListAsync()
+
+        };
+            return View(authorViewModel);
         }
 
         // GET: Books/Details/5
